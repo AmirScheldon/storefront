@@ -138,3 +138,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# to convert str to int in api view ("unit_price": "4.00" ==> "unit_price": 4.00)
+REST_FRAMEWORK = {
+  "COERCE_DECIMAL_TO_STRING": False  
+}
