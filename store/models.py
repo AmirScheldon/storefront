@@ -7,6 +7,7 @@ class Promotion(models.Model):
     #django makes a field named as Product_set. if you want change it, use 'related_name="sth" ' in Product!
 
 class Product(models.Model):
+    id = models.BigAutoField(primary_key=True)
     title = models.CharField(max_length=250)
     slug = models.SlugField()
     # null = True: its for DB

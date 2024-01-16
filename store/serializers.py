@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Product, Collection
 from decimal import Decimal
 
-# with using "ModelSerializer" we can quickly make serializer with duplication
+# with using "ModelSerializer" we can quickly make serializer without duplication
 class CollectionSerializers(serializers.ModelSerializer):
     class Meta:
         model = Collection
@@ -11,11 +11,12 @@ class CollectionSerializers(serializers.ModelSerializer):
 class ProductSerializers(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'title', 'unit_price', 'price_with_tax']
+        fields = ['id', 'title', 'slug', 'unit_price', 'inventory', 'collection', 'price_with_tax']
     price_with_tax = serializers.SerializerMethodField(method_name= 'tax_calculator')
     
     def tax_calculator(self, product: Product):
-        return product.unit_price * Decimal(1.1)     
+        return product.unit_price * Decimal(1.1)
+    
     
 
 """
@@ -51,3 +52,10 @@ class ProductSerializers(serializers.ModelSerializer):
 #         queryset = Collection.objects.all(),
 #         view_name= "colllection_detail"
 #     )
+
+"""
+    deserializing data: 
+        *it happens when we receives data from client.
+        * client send a POST request to an endpoint and it must be JSON!
+        * on the server we have to read the data and deserialize it to store it in the database 
+"""
