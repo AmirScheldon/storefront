@@ -1,8 +1,14 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
+from django.db.models import Count
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from .models import Product, Collection
-from .serializers import ProductSerializers, CollectionSerializers
+from rest_framework import status
+from .serializers import ProductSerializers, CollectionSerializers, ReviewsSerilizer
+from .models import Product, Collection, OrderItem, Reviews
+from .pagination import DefaultPagination
+from .filters import ProductFilter
 
 """
     Django:
@@ -12,40 +18,47 @@ from .serializers import ProductSerializers, CollectionSerializers
         Request
         Response
     which is simpler and more powerful than Django's.
-    
+
 """
-# 2.String(store/serializers/ProductSerializers)
-# this func gives use "The browseable api" which make incredibly easy to test our api EndPoint in browser.
-# we pass a list of strings that specify the HTTP method we support in this endpoint 
-@api_view(['GET', 'POST'])
-def product_list(request):
-    if request.method == 'GET':
-        # here to solve "lots of queries" add "select_related('collection')" to reduce queries.
-        queryset = Product.objects.select_related('collection').all()
-        # many= True: serializer iterate over the the querset and convert each object to dictionary
-        serializer = ProductSerializers(queryset, many= True, context={'request': request})
-        return Response(serializer.data)
-    elif request.method == 'POST':
-        # deserialize data
-        serializer = ProductSerializers(data= request.data)
-        # we can override validation rules in "serializer.py" with "valid" method
-        serializer.is_valid(raise_exception= True)
-        # it shows us OrderedDict in our console
-        serializer.save()
-        return Response('ok')
-
-@api_view()
-def product_detail(request, id):
-    product = get_object_or_404(Product, pk= id)
-    # convert our product object to dictonary
-    serializer = ProductSerializers(product)
-    # serializer.data: gives us the dictionary
-    return Response(serializer.data)
-
-@api_view()
-def collection_detail(request, pk):
-    collection = get_object_or_404(Collection, pk= pk)
-    serializer = CollectionSerializers(collection)
-    return Response(serializer.data)
+# class base view make us to write cleaner and less code( less if statement)
+# it(ModelViewSet) does 'GET', 'POST', 'PUT AND PATCH' and 'DELETE'
+# we have ReadOnlyModelViewSet that perform only Get performance
+class ProductViewSets(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializers
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ProductFilter
+    pagination_class = DefaultPagination
+    search_fields = ['title', 'description']
+    ordering_fields = ['unit_price', 'last_update']
     
+    def get_serializer_context(self):
+        return {'request': self.request}
+    
+    def destroy(self, request, *args, **kwargs):
+        if OrderItem.objects.filter(product_id= kwargs['pk']).count() > 0:
+            return Response({'error': 'product cannot be deleted bcause it include one or more ordered item.'})
+        return super().destroy(request, *args, **kwargs)
 
+class CollectionViewSets(ModelViewSet):
+    queryset = Collection.objects.annotate(
+        products_count= Count('products')).all() 
+    serializer_class = CollectionSerializers
+    def get_serializer_context(self):
+        return {'request': self.request}
+    
+    def delete(self, request, pk):
+        collection = get_object_or_404(Collection, pk)
+        if collection.products.count() > 0 :
+            return Response({'error': 'collection cannot be deleted bcause it include one or more product.'}, status= status.HTTP_400_BAD_REQUEST)
+        collection.delete()
+        return Response(status= status.HTTP_204_NO_CONTENT)
+    
+class ReviewsViewSets(ModelViewSet):
+    serializer_class = ReviewsSerilizer
+
+    def get_queryset(self):
+        return Reviews.objects.filter(product_id = self.kwargs['products_pk'])
+    
+    def get_serializer_context(self):
+        return {'product_id': self.kwargs['products_pk']}

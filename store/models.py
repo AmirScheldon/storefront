@@ -21,7 +21,7 @@ class Product(models.Model):
     inventory = models.IntegerField()
     last_update = models.DateTimeField(auto_now_add=True)
     #if child came before parent, pass the STRING of parent!
-    collection = models.ForeignKey('Collection', on_delete = models.PROTECT)
+    collection = models.ForeignKey('Collection', on_delete = models.PROTECT, related_name= 'products')
     promotions = models.ManyToManyField(Promotion, blank= True)       
     
     def __str__(self) -> str:
@@ -89,7 +89,7 @@ class OrderItem(models.Model):
     unit_price = models.DecimalField(max_digits = 6, decimal_places = 2)
     order = models.ForeignKey(Order, on_delete = models.PROTECT)
     # parent and child should be in order(parent define before child)
-    product = models.ForeignKey( Product, on_delete = models.PROTECT)
+    product = models.ForeignKey( Product, on_delete = models.PROTECT, related_name= 'orderitems')
     
 
 class Cart(models.Model):
@@ -99,4 +99,9 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete = models.CASCADE)
     product = models.ForeignKey(Product, on_delete = models.CASCADE)
     quantity = models.PositiveSmallIntegerField()
-
+    
+class Reviews(models.Model):
+    product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)
+    name = models.CharField(max_length=60)
+    description = models.TextField()
+    time = models.TimeField(auto_now_add=True)

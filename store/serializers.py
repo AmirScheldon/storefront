@@ -1,24 +1,32 @@
 from rest_framework import serializers
-from .models import Product, Collection
+from .models import Product, Collection, Reviews
 from decimal import Decimal
 
 # with using "ModelSerializer" we can quickly make serializer without duplication
 class CollectionSerializers(serializers.ModelSerializer):
     class Meta:
         model = Collection
-        fields = ['id', 'name']
-
+        fields = ['id', 'name', 'products_count']
+    products_count = serializers.IntegerField(read_only=True)
+ 
+    
 class ProductSerializers(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'title', 'slug', 'unit_price', 'inventory', 'collection', 'price_with_tax']
+        fields = ['id', 'title', 'slug', 'description', 'unit_price', 'inventory', 'collection', 'price_with_tax']
     price_with_tax = serializers.SerializerMethodField(method_name= 'tax_calculator')
     
     def tax_calculator(self, product: Product):
         return product.unit_price * Decimal(1.1)
     
-    
-
+class ReviewsSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = Reviews
+        fields = ['id', 'name', 'description', 'time']
+        
+    def create(self, validated_data):
+        product_id = self.context['product_id']
+        return Reviews.objects.create(product_id = product_id , **validated_data)
 """
     serializing relationships:
         1.Primary key
