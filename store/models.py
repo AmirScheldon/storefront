@@ -1,5 +1,8 @@
 from django.core.validators import MinValueValidator
+from django.conf import settings
+from django.contrib  import admin
 from django.db import models
+from uuid import uuid4
 
 class Promotion(models.Model):
     description = models.CharField(max_length = 255)
@@ -51,18 +54,24 @@ class Customer(models.Model):
         (MEMBERSHIP_SILVER, 'Silver'),
         (MEMBERSHIP_BRONZE, 'Bronze') ]
     
-    first_name= models.CharField(max_length=50)
-    last_name= models.CharField(max_length=50)
-    email=models.EmailField(max_length=254, unique= True)
     phone= models.CharField(max_length= 255)
     birth_date= models.DateField(null= True)
     membership = models.CharField(max_length= 1, choices = MEMBERSHIP_CHOICES, default= MEMBERSHIP_BRONZE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete = models.CASCADE)
+    
+    @admin.display(ordering= 'user__first_name')
+    def first_name(self):
+        return self.user.first_name
+    
+    @admin.display(ordering= 'user__last_name')    
+    def last_name(self):
+        return self.user.last_name
     
     def __str__(self) -> str:
-        return f' {self.first_name} {self.last_name}'
+        return f' {self.user.first_name} {self.user.last_name}'
     
     class Meta:
-        ordering = ['first_name', 'last_name'] 
+        ordering = ['user__first_name', 'user__last_name'] 
     
 class Order(models.Model):
     PAYMENT_STATUS_PENDING = 'P'
@@ -77,6 +86,11 @@ class Order(models.Model):
     placed_at = models.DateTimeField(auto_now_add= True)
     payment_status = models.CharField(max_length = 1, choices = PAYMENT_STATUS_CHOICES, default = PAYMENT_STATUS_PENDING)
     customer = models.ForeignKey(Customer, on_delete = models.PROTECT)
+    
+    class Meta:
+        permissions =[
+            ('can_cancel', 'Can cancel order')
+        ]
     
 class Address(models.Model):
     zip =zip()
@@ -93,12 +107,18 @@ class OrderItem(models.Model):
     
 
 class Cart(models.Model):
+    # django automatically use int numbers for making id field it makes hacker job easy to send req and mess with carts
+    id = models.UUIDField(primary_key= True, default= uuid4)
     created_at = models.DateTimeField(auto_now_add = True)
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete = models.CASCADE)
+    cart = models.ForeignKey(Cart, on_delete = models.CASCADE, related_name = 'items')
     product = models.ForeignKey(Product, on_delete = models.CASCADE)
-    quantity = models.PositiveSmallIntegerField()
+    quantity = models.PositiveSmallIntegerField(
+        validators = [MinValueValidator(1)]
+    )
+    class Meta:
+        unique_together = [['product', 'cart']]
     
 class Reviews(models.Model):
     product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)

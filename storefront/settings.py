@@ -42,9 +42,9 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'django_filters',
     'store',
-    'store_custom',
     'tags',
     'likes',
+    'core',
 ]
 
 INTERNAL_IPS = [
@@ -145,3 +145,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
   "COERCE_DECIMAL_TO_STRING": False  
 }
+
+# to make customize USER
+AUTH_USER_MODEL = 'core.User'

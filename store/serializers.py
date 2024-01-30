@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Collection, Reviews
+from .models import Product, Collection, Reviews, Cart, CartItem
 from decimal import Decimal
 
 # with using "ModelSerializer" we can quickly make serializer without duplication
@@ -27,6 +27,71 @@ class ReviewsSerilizer(serializers.ModelSerializer):
     def create(self, validated_data):
         product_id = self.context['product_id']
         return Reviews.objects.create(product_id = product_id , **validated_data)
+
+class SimpleProduct(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['title', 'description', 'unit_price']
+    
+class CartItemSerializers(serializers.ModelSerializer):
+    product = SimpleProduct()
+    product_total_price = serializers.SerializerMethodField()
+    
+    def get_product_total_price(self, item: CartItem):
+        return item.product.unit_price * item.quantity
+    
+    def create(self, validated_data):
+        items_id = self.context[items_id]
+        return CartItem.object.create(items_id = items_id, **validated_data)
+    
+    class Meta:
+        model = CartItem
+        fields = ['product', 'quantity', 'product_total_price']
+        
+    
+class CartSerializers(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only= True)
+    items = CartItemSerializers(many= True, read_only= True)
+    total_price = serializers.SerializerMethodField()
+    
+    def get_total_price(self, cart: Cart):
+        return sum([item.quantity * item.product.unit_price for item in cart.items.all()])
+    class Meta:
+        model = Cart
+        fields = ['id', 'items', 'total_price']
+        
+class AddCartItemSerializers(serializers.ModelSerializer):
+    product_id =serializers.IntegerField()
+    
+    def validate_product_id(self, value):
+        if not Product.objects.filter(pk = value).exists():
+            raise serializers.ValidationError('No product does exist with given id was found.')
+        return value
+    
+    def save(self, **kwargs):
+        cart_id = self.context['cart_id']
+        product_id = self.validated_data['product_id']
+        quantity = self.validated_data['quantity']
+        try:
+            cart_item = CartItem.objects.get(product_id = product_id, cart_id= cart_id)
+            cart_item.quantity += quantity 
+            cart_item.save()
+            self.instance = cart_item
+        except CartItem.DoesNotExist:
+            self.instance = CartItem.objects.create(cart_id = cart_id , **self.validated_data)
+        return self.instance
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product_id', 'quantity'] 
+        
+class UpdateCartItemSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ['quantity']
+    
+        
+
 """
     serializing relationships:
         1.Primary key

@@ -2,11 +2,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin, DestroyModelMixin
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import ProductSerializers, CollectionSerializers, ReviewsSerilizer
-from .models import Product, Collection, OrderItem, Reviews
+from .serializers import ProductSerializers, CollectionSerializers, ReviewsSerilizer, CartSerializers, CartItemSerializers, AddCartItemSerializers, UpdateCartItemSerializers
+from .models import Product, Collection, OrderItem, Reviews, Cart, CartItem
 from .pagination import DefaultPagination
 from .filters import ProductFilter
 
@@ -62,3 +63,27 @@ class ReviewsViewSets(ModelViewSet):
     
     def get_serializer_context(self):
         return {'product_id': self.kwargs['products_pk']}
+    
+class CartVewSets(CreateModelMixin, 
+                  RetrieveModelMixin, 
+                  DestroyModelMixin, 
+                  GenericViewSet):
+    queryset = Cart.objects.prefetch_related('items__product').all()
+    serializer_class = CartSerializers
+
+class CartItemViewSets(ModelViewSet): 
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    def get_serializer_context(self):
+        return {'cart_id': self.kwargs['carts_pk']}
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return AddCartItemSerializers
+        if self.request.method == 'PATCH':
+            return UpdateCartItemSerializers
+        return CartItemSerializers
+    
+    def get_queryset(self):
+        return CartItem.objects.\
+            filter(cart_id = self.kwargs['carts_pk'])\
+            .select_related('product')

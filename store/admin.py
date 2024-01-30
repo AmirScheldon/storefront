@@ -73,7 +73,7 @@ class CustomerAdmin(admin.ModelAdmin):
     # to search better use "lookup(__sth)"
     # i = insensitve
     search_fields = ['first_name__istartswith', 'last_name__istartswith']
-    ordering = ['first_name', 'last_name']
+    ordering = ['user__first_name', 'user__last_name']
     
     @admin.display(ordering= 'orders')
     def orders(self, customer):
