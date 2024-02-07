@@ -8,6 +8,8 @@ mysqlclient = "*"
 djangorestframework = "*"
 shell = "*"
 drf-nested-routers = "*"
+djoser = "*"
+djangorestframework-simplejwt = "*"
 
 [dev-packages]
 
