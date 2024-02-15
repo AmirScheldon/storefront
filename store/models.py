@@ -86,7 +86,7 @@ class Order(models.Model):
     
     placed_at = models.DateTimeField(auto_now_add= True)
     payment_status = models.CharField(max_length = 1, choices = PAYMENT_STATUS_CHOICES, default = PAYMENT_STATUS_PENDING)
-    customer = models.ForeignKey(Customer, on_delete = models.PROTECT)
+    customer = models.ForeignKey(Customer, on_delete = models.PROTECT, related_name= 'customer')
     
     class Meta:
         permissions =[
@@ -102,9 +102,10 @@ class Address(models.Model):
 class OrderItem(models.Model):
     quantity = models.PositiveBigIntegerField()
     unit_price = models.DecimalField(max_digits = 6, decimal_places = 2)
-    order = models.ForeignKey(Order, on_delete = models.PROTECT)
+    order = models.ForeignKey(Order, on_delete = models.PROTECT, related_name= 'items')
     # parent and child should be in order(parent define before child)
     product = models.ForeignKey( Product, on_delete = models.PROTECT, related_name= 'orderitems')
+    #cart = models.ForeignKey('Cart', on_delete = models.DO_NOTHING )
     
 
 class Cart(models.Model):
