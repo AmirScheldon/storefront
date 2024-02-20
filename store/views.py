@@ -5,12 +5,14 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveMode
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-from .serializers import ProductSerializers, CollectionSerializers, ReviewsSerilizer, CartSerializers, CartItemSerializers, AddCartItemSerializers, UpdateCartItemSerializers, CustomerSerializers, OrderSerializers, CreateOrderSerializers, UpdateOrderSerializers
-from .models import Product, Collection, OrderItem, Reviews, Cart, CartItem, Customer, Order
+from .serializers import ProductSerializers, CollectionSerializers, ReviewsSerilizer,\
+                         CartSerializers, CartItemSerializers, AddCartItemSerializers,\
+                         UpdateCartItemSerializers, CustomerSerializers, OrderSerializers,\
+                         CreateOrderSerializers, UpdateOrderSerializers, ProductImageSerializers
+from .models import Product, Collection, OrderItem, ProductImage, Reviews, Cart, CartItem, Customer, Order
 from .pagination import DefaultPagination
 from .filters import ProductFilter
 from .permissions import IsAdminOrReadOnly, CustomeDjangoModelPermissions, ViewCustomerHistoryPermission
@@ -29,7 +31,7 @@ from .permissions import IsAdminOrReadOnly, CustomeDjangoModelPermissions, ViewC
 # it(ModelViewSet) does 'GET', 'POST', 'PUT AND PATCH' and 'DELETE'
 # we have ReadOnlyModelViewSet that perform only Get performance
 class ProductViewSets(ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.prefetch_related('image').all()
     serializer_class = ProductSerializers
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = ProductFilter
@@ -156,3 +158,12 @@ class OrderViewSets(ModelViewSet):
             return Order.objects.all()
         customer_id = Customer.objects.only('id').get(user_id= user.id)
         return Order.objects.filter(customer_id = customer_id)
+
+class ProductImageViewSets(ModelViewSet):
+    serializer_class = ProductImageSerializers
+    
+    def get_queryset(self):
+        return ProductImage.objects.filter(product_id= self.kwargs['products_pk'])
+
+    def get_serializer_context(self):
+        return {'product_id': self.kwargs['products_pk']}    

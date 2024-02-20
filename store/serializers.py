@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Collection, Reviews, Cart, CartItem, Customer, Order, OrderItem
+from .models import Product, Collection, Reviews, Cart, CartItem, Customer, Order, OrderItem, ProductImage
 from decimal import Decimal
 from django.db import transaction
 from .signals.signal import order_created
@@ -10,12 +10,20 @@ class CollectionSerializers(serializers.ModelSerializer):
         model = Collection
         fields = ['id', 'name', 'products_count']
     products_count = serializers.IntegerField(read_only=True)
- 
-    
+
+class ProductImageSerializers(serializers.ModelSerializer):
+    def  create(self, validated_data):
+        product_id = self.context['product_id']
+        return ProductImage.objects.create(product_id = product_id, **validated_data)
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image']
+
 class ProductSerializers(serializers.ModelSerializer):
+    image = ProductImageSerializers(many = True, read_only = True)
     class Meta:
         model = Product
-        fields = ['id', 'title', 'slug', 'description', 'unit_price', 'inventory', 'collection', 'price_with_tax']
+        fields = ['id', 'title', 'slug', 'description', 'unit_price', 'inventory', 'collection', 'price_with_tax', 'image']
     price_with_tax = serializers.SerializerMethodField(method_name= 'tax_calculator')
     
     def tax_calculator(self, product: Product):
@@ -142,9 +150,12 @@ class CreateOrderSerializers(serializers.Serializer):
             
             Cart.objects.filter(pk = self._validated_data['cart_id']).delete()
             
+            #sending signal
             order_created.send_robust(self.__class__ , order = order)
             
             return order
+
+
         
         
 """

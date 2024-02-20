@@ -25,7 +25,16 @@ class ProductInventory(admin.SimpleListFilter):
     # we implement filtering logic in this method   
     def queryset(self, request: Any, queryset: QuerySet[Any]) -> QuerySet[Any] | None:
         if self.value() == '<10':
-            return queryset.filter(inventory__lt = 10)    
+            return queryset.filter(inventory__lt = 10)   
+        
+class ProductImageInline(admin.TabularInline):
+    model = models.ProductImage
+    readonly_fields = ['thumbnail']
+    
+    def thumbnail(self, instance):
+        if instance.image.name != '':
+            return format_html(f'<image src= "{instance.image.url}" class = "thumbnail" />')
+        return ''
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -46,6 +55,8 @@ class ProductAdmin(admin.ModelAdmin):
     list_select_related = ['collection']
     list_filter = ['collection', 'last_update', ProductInventory]
     search_fields = ['product']
+    inlines = [ProductImageInline]
+    
     
     def colllection_name(self, product):
         return product.collection.name
@@ -64,6 +75,10 @@ class ProductAdmin(admin.ModelAdmin):
             #to select type message (ERROR - WARNING - SUCCESS)
             messages.SUCCESS
         )
+    class Media:
+        css = {
+            'all': ['store/style.css']
+        }
 
 @admin.register(Customer)    
 class CustomerAdmin(admin.ModelAdmin):
