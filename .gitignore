@@ -76,3 +76,6 @@
 *.exe
 *.out
 *.app
+
+.env
+**/*.pyc
