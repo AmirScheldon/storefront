@@ -14,7 +14,7 @@ values
 insert into
   store_product (
     id,
-    name,
+    title,
     description,
     unit_price,
     inventory,

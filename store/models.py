@@ -1,4 +1,3 @@
-#FileExtensionValidator: to validate files formats
 from django.core.validators import MinValueValidator, FileExtensionValidator
 from django.conf import settings
 from django.contrib  import admin
@@ -9,23 +8,18 @@ from .validator import validate_image_size
 class Promotion(models.Model):
     description = models.CharField(max_length = 255)
     discount = models.FloatField()
-    #django makes a field named as Product_set. if you want change it, use 'related_name="sth" ' in Product!
 
 class Product(models.Model):
     id = models.BigAutoField(primary_key=True)
     title = models.CharField(max_length=250)
     slug = models.SlugField()
-    # null = True: its for DB
-    # blank = True: its for AdminPanel(validation purpose)
     description = models.TextField(null = True, blank = True)
     unit_price = models.DecimalField(
         max_digits= 5,
         decimal_places= 2,
-        #it has default message that you can change it by "message="
         validators= [MinValueValidator(1)])
     inventory = models.IntegerField()
     last_update = models.DateTimeField(auto_now_add=True)
-    #if child came before parent, pass the STRING of parent!
     collection = models.ForeignKey('Collection', on_delete = models.PROTECT, related_name= 'products')
     promotions = models.ManyToManyField(Promotion, blank= True)       
     
@@ -38,7 +32,7 @@ class Product(models.Model):
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete= models.CASCADE, related_name = 'image')
     image = models.ImageField(upload_to= 'store/media',
-                              validators= [FileExtensionValidator(allowed_extensions= ['jpg']), validate_image_size] )
+                              validators= [FileExtensionValidator(allowed_extensions= ['jpg', 'png']), validate_image_size] )
 
 class Collection(models.Model):
     name = models.CharField(max_length = 255)
@@ -110,13 +104,11 @@ class OrderItem(models.Model):
     quantity = models.PositiveBigIntegerField()
     unit_price = models.DecimalField(max_digits = 6, decimal_places = 2)
     order = models.ForeignKey(Order, on_delete = models.PROTECT, related_name= 'items')
-    # parent and child should be in order(parent define before child)
     product = models.ForeignKey( Product, on_delete = models.PROTECT, related_name= 'orderitems')
-    #cart = models.ForeignKey('Cart', on_delete = models.DO_NOTHING )
+
     
 
 class Cart(models.Model):
-    # django automatically use int numbers for making id field it makes hacker job easy to send req and mess with carts
     id = models.UUIDField(primary_key= True, default= uuid4)
     created_at = models.DateTimeField(auto_now_add = True)
 

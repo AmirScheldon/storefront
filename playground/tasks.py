@@ -8,16 +8,3 @@ def notify_customers(message):
     print(message)
     sleep(10)
     print('succed!')
-
-
-
-
-
-'''
-#it makes dependency!
-from storefront.celery import celery
-
-
-@celery.task
-
-'''

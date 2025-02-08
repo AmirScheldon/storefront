@@ -79,3 +79,5 @@
 
 .env
 **/*.pyc
+/static/
+storefront_client/.cache

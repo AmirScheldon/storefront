@@ -11,7 +11,14 @@ drf-nested-routers = "*"
 djoser = "*"
 djangorestframework-simplejwt = "*"
 pillow = "*"
-pil = "*"
+celery = "*"
+django-filter = "*"
+django-cors-headers = "*"
+django-debug-toolbar = "*"
+django-redis = "*"
+django-silk = "*"
+whitenoise = "*"
+django = "*"
 
 [dev-packages]
 
