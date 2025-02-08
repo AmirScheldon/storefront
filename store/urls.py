@@ -1,17 +1,12 @@
 from django.urls import path
 from . import views
 from rest_framework_nested import routers
-# router generate URL pattern for ViewSets for us.
 
-"""
-    DefaultRouter:
-        * it shows us API ROOT at store ENDPOINT
-        * it shows us json file by using product.json
-"""
+
 router = routers.DefaultRouter()
 router.register('products', views.ProductViewSets, basename= 'products')
 router.register('collections', views.CollectionViewSets)
-router.register('carts', views.CartVewSets )
+router.register('carts', views.CartViewSets )
 router.register('customer', views.CustomerViewSets)
 router.register('order', views.OrderViewSets, basename= 'order')
 

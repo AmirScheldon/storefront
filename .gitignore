@@ -76,3 +76,8 @@
 *.exe
 *.out
 *.app
+
+.env
+**/*.pyc
+/static/
+storefront_client/.cache

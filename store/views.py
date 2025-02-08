@@ -17,19 +17,7 @@ from .pagination import DefaultPagination
 from .filters import ProductFilter
 from .permissions import IsAdminOrReadOnly, CustomeDjangoModelPermissions, ViewCustomerHistoryPermission
 
-"""
-    Django:
-        HttpRequest
-        HttpResponse
-    REST Framework:
-        Request
-        Response
-    which is simpler and more powerful than Django's.
 
-"""
-# class base view make us to write cleaner and less code( less if statement)
-# it(ModelViewSet) does 'GET', 'POST', 'PUT AND PATCH' and 'DELETE'
-# we have ReadOnlyModelViewSet that perform only Get performance
 class ProductViewSets(ModelViewSet):
     queryset = Product.objects.prefetch_related('image').all()
     serializer_class = ProductSerializers
@@ -73,7 +61,7 @@ class ReviewsViewSets(ModelViewSet):
     def get_serializer_context(self):
         return {'product_id': self.kwargs['products_pk']}
     
-class CartVewSets(CreateModelMixin, 
+class CartViewSets(CreateModelMixin, 
                   RetrieveModelMixin, 
                   DestroyModelMixin, 
                   GenericViewSet):
@@ -100,7 +88,6 @@ class CartItemViewSets(ModelViewSet):
             
 
 class CustomerViewSets(ModelViewSet):
-    
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializers
     permission_classes = [IsAdminUser]
@@ -109,9 +96,7 @@ class CustomerViewSets(ModelViewSet):
     def history(self, request, pk):
         return Response('ok')
 
-#to add any cutome Action(method) must use action decorator
-#"detail = False": this action available on LISTVIEW
-#"detail = True": this action available on DETAILVIEW
+
     @action(detail= False, methods= ['GET', 'POST'], permission_classes= [IsAuthenticated])    
     def me(self, request):
         if not request.user.is_authenticated:

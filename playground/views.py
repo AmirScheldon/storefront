@@ -1,9 +1,14 @@
-from django.db import transaction
 from django.shortcuts import render
-from store.models import Order, OrderItem
-from .tasks import notify_customers
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+import requests
+from rest_framework.views import APIView
+from django.utils.decorators import method_decorator
 
-
-def hello(request):
-    notify_customers.delay('hello')
-    return render(request, 'hello.html', {'name' :"Amir"})
+class HelloViewSet(APIView):
+    @method_decorator(cache_page(10 * 60))
+    def get(self, request):
+        response = requests.post('https://httpbin.org/delay/2')
+        result = response.json()
+        return render(request, 'hello.html', {'name' :'Amir'})       
+    
